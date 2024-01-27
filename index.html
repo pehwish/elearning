@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>e learning text contents</title>
+    <link rel="stylesheet" href="./css/style.min.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="quiz">가장 큰 수는?</div>
+      <div class="hero">
+        <img src="/images/santa/Walk (1).png" id="heroImg" alt="" />
+      </div>
+      <div class="tiles"></div>
+      <div class="boxs">
+        <div class="boxs__inner">
+          <button class="box" data-number="12">
+            <span class="box__text">12</span>
+          </button>
+          <button class="box" data-number="22">
+            <span class="box__text">22</span>
+          </button>
+          <button class="box" data-number="33">
+            <span class="box__text">33</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="./js/anime.min.js"></script>
+    <script>
+      function animate(opts) {
+        var start = new Date(),
+          id = setInterval(function () {
+            var timePassed = new Date() - start,
+              progress = timePassed / opts.duration;
+
+            if (progress > 1) progress = 1;
+
+            var delta = opts.delta(progress);
+            opts.step(delta);
+
+            if (progress === 1) {
+              clearInterval(id);
+            }
+          }, opts.delay);
+      }
+
+      function makeEaseOut(delta) {
+        return function (progress) {
+          return 1 - delta(1 - progress);
+        };
+      }
+
+      function linear(progress) {
+        return progress;
+      }
+
+      function spriteAnimation(spriteArray, spriteObj, duration = 1300) {
+        var index = 0;
+        animate({
+          delay: 50,
+          duration,
+          delta: makeEaseOut(linear),
+          step: function (delta) {
+            console.log('@ sprite!');
+            if (spriteArray.length - 1 === index) {
+              index = 0;
+            }
+            spriteObj.src = spriteArray[index];
+            index++;
+          }
+        });
+      }
+
+      const hero = document.getElementById('heroImg');
+
+      const animationFrame = {
+        working: [
+          '/images/santa/Walk (1).png',
+          '/images/santa/Walk (2).png',
+          '/images/santa/Walk (3).png',
+          '/images/santa/Walk (4).png',
+          '/images/santa/Walk (5).png',
+          '/images/santa/Walk (6).png',
+          '/images/santa/Walk (7).png',
+          '/images/santa/Walk (8).png',
+          '/images/santa/Walk (9).png',
+          '/images/santa/Walk (10).png',
+          '/images/santa/Walk (11).png',
+          '/images/santa/Walk (12).png',
+          '/images/santa/Walk (13).png'
+        ],
+        idles: [
+          '/images/santa/Idle (1).png',
+          '/images/santa/Idle (2).png',
+          '/images/santa/Idle (3).png',
+          '/images/santa/Idle (4).png',
+          '/images/santa/Idle (5).png',
+          '/images/santa/Idle (6).png',
+          '/images/santa/Idle (7).png',
+          '/images/santa/Idle (8).png',
+          '/images/santa/Idle (9).png',
+          '/images/santa/Idle (10).png',
+          '/images/santa/Idle (11).png',
+          '/images/santa/Idle (12).png',
+          '/images/santa/Idle (13).png',
+          '/images/santa/Idle (14).png',
+          '/images/santa/Idle (15).png',
+          '/images/santa/Idle (16).png'
+        ],
+        jumps: [
+          '/images/santa/Jump (1).png',
+          '/images/santa/Jump (2).png',
+          '/images/santa/Jump (3).png',
+          '/images/santa/Jump (4).png',
+          '/images/santa/Jump (5).png',
+          '/images/santa/Jump (6).png',
+          '/images/santa/Jump (7).png',
+          '/images/santa/Jump (8).png',
+          '/images/santa/Jump (9).png',
+          '/images/santa/Jump (10).png',
+          '/images/santa/Jump (11).png',
+          '/images/santa/Jump (12).png',
+          '/images/santa/Jump (13).png',
+          '/images/santa/Jump (14).png',
+          '/images/santa/Jump (15).png',
+          '/images/santa/Jump (16).png'
+        ],
+        dead: [
+          '/images/santa/Dead (1).png',
+          '/images/santa/Dead (2).png',
+          '/images/santa/Dead (3).png',
+          '/images/santa/Dead (4).png',
+          '/images/santa/Dead (5).png',
+          '/images/santa/Dead (6).png',
+          '/images/santa/Dead (7).png',
+          '/images/santa/Dead (8).png',
+          '/images/santa/Dead (9).png',
+          '/images/santa/Dead (10).png',
+          '/images/santa/Dead (11).png',
+          '/images/santa/Dead (12).png',
+          '/images/santa/Dead (13).png',
+          '/images/santa/Dead (14).png',
+          '/images/santa/Dead (15).png',
+          '/images/santa/Dead (16).png',
+          '/images/santa/Dead (17).png'
+        ]
+      };
+
+      spriteAnimation(animationFrame.working, hero, 1300);
+
+      var tID;
+      function animateScript(spriteArray, spriteObj) {
+        var index = 0;
+
+        var position = 256; //start position for the image slicer
+        const interval = 100; //100 ms of interval for the setInterval()
+        tID = setInterval(() => {
+          if (spriteArray.length - 1 === index) {
+            index = 0;
+          }
+          spriteObj.src = spriteArray[index];
+          index++;
+        }, interval);
+      }
+
+      function stopAnimate() {
+        clearInterval(tID);
+      } //end of stopAnimate()
+
+      function idle() {
+        animateScript(animationFrame.idles, hero);
+      }
+
+      anime({
+        targets: '.hero',
+        translateX: 70,
+        duration: 1300,
+        easing: 'linear',
+        complete: idle
+      });
+
+      //   console.log('이게 시작인데..');
+
+      const boxs = document.querySelectorAll('.box');
+
+      const ANSWER = 2;
+
+      let answerPosition = [
+        {
+          x: '-40vw',
+          y: '40vh'
+        },
+        {
+          x: '-40vw',
+          y: '10vh'
+        },
+        {
+          x: '-50vw',
+          y: '-10vh'
+        }
+      ];
+
+      boxs.forEach((box, index) => {
+        box.addEventListener('click', () => {
+          console.log('click', box.dataset.number);
+          stopAnimate();
+          anime({
+            targets: box,
+            translateX: answerPosition[index].x,
+            translateY: answerPosition[index].y,
+            duration: 1300,
+            complete: setTimeout(() => resultHero(index), 600)
+          });
+        });
+      });
+
+      function resultHero(selectAnswer) {
+        stopAnimate();
+        animateScript(animationFrame.jumps, hero, 1600);
+        anime({
+          targets: '.hero',
+          translateX: '32vw',
+          translateY: '-11vh',
+          duration: 2300,
+          easing: 'easeInOutSine',
+          complete: setTimeout(() => resultMotion(), 1000)
+        });
+
+        const resultMotion = () => {
+          stopAnimate();
+          if (selectAnswer === ANSWER) {
+            console.log('정답!!!~!');
+            anime.remove('.hero');
+            animateScript(animationFrame.idles, hero);
+          } else {
+            console.log('오답!!!');
+            anime.remove('.hero');
+            animateScript(animationFrame.dead, hero);
+          }
+        };
+      }
+    </script>
+  </body>
+</html>
