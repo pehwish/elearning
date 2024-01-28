@@ -11,7 +11,11 @@
     <div id="app">
       <div class="quiz">가장 큰 수는?</div>
       <div class="hero">
-        <img src="/elearning/images/santa/Walk_1.png" id="heroImg" alt="" />
+        <img
+          src="/elearning/elearning/images/santa/Walk_1.png"
+          id="heroImg"
+          alt=""
+        />
       </div>
       <div class="tiles"></div>
       <div class="boxs">
@@ -28,6 +32,7 @@
         </div>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@mojs/core"></script>
     <script src="/elearning/js/anime.min.js"></script>
     <script>
       function animate(opts) {
@@ -149,14 +154,17 @@
         ]
       };
 
-      var tID;
-      function animateScript(spriteArray, spriteObj) {
-        var index = 0;
+      let tID;
+      function animateScript(spriteArray, spriteObj, isOnce = false) {
+        let index = 0;
 
-        var position = 256; //start position for the image slicer
         const interval = 100; //100 ms of interval for the setInterval()
         tID = setInterval(() => {
           if (spriteArray.length - 1 === index) {
+            if (isOnce) {
+              stopAnimate();
+              return;
+            }
             index = 0;
           }
           spriteObj.src = spriteArray[index];
@@ -166,7 +174,7 @@
 
       function stopAnimate() {
         clearInterval(tID);
-      } //end of stopAnimate()
+      }
 
       function idle() {
         animateScript(animationFrame.idles, hero);
@@ -191,9 +199,172 @@
         }
       ];
 
+      const COLORS = {
+        RED: '#FD5061',
+        YELLOW: '#FFCEA5',
+        BLACK: '#29363B',
+        WHITE: 'white',
+        VINOUS: '#A50710'
+      };
+
+      const DURATION = 500;
+      const CNT = 10;
+      const PARENT_H = 50;
+      const BURST_R = 75;
+      const SHIFT = 300;
+
+      const makeDust = (dir = -1) => {
+        const parent = new mojs.Shape({
+          left: 0,
+          top: 0,
+          width: 200,
+          height: 50,
+          radius: 0,
+          x: { 0: dir * SHIFT },
+          duration: 1.2 * DURATION,
+          isShowStart: true,
+          isTimelineLess: true,
+          isForce3d: true
+        });
+
+        parent.el.style['overflow'] = 'hidden';
+
+        const burst = new mojs.Burst({
+          parent: parent.el,
+          count: CNT,
+          top: PARENT_H + BURST_R,
+          degree: 90,
+          radius: BURST_R,
+          angle: dir === -1 ? { [-90]: 40 } : { [0]: -130 },
+          children: {
+            fill: 'white',
+            delay:
+              dir === -1
+                ? `stagger(${DURATION}, -${DURATION / CNT})`
+                : `stagger(${DURATION / CNT})`,
+            radius: 'rand(8, 25)',
+            direction: -1,
+            isSwirl: true,
+            isForce3d: true
+          }
+        });
+
+        const fadeBurst = new mojs.Burst({
+          parent: parent.el,
+          count: 2,
+          degree: 0,
+          angle: -1 * dir * 75,
+          radius: { 0: 100 },
+          top: '90%',
+          timeline: { delay: 0.8 * DURATION },
+          children: {
+            fill: 'white',
+            pathScale: [0.65, 1],
+            radius: 'rand(12, 15)',
+            direction: [dir, -1 * dir],
+            isSwirl: true,
+            isForce3d: true
+          }
+        });
+
+        const timeline = new mojs.Timeline();
+        timeline.add(parent, burst, fadeBurst);
+
+        return { parent, timeline };
+      };
+
+      const circle = new mojs.Shape({
+        left: 0,
+        top: 0,
+        strokeWidth: 10,
+        fill: 'none',
+        radius: 150,
+        scale: { 0: 1 },
+        opacity: { 1: 0 },
+        shape: 'circle',
+        stroke: 'white',
+        strokeWidth: 10,
+        fill: 'none',
+        duration: 1.5 * DURATION,
+        isForce3d: true,
+        isTimelineLess: true
+      });
+
+      const cloud = new mojs.Burst({
+        left: 0,
+        top: 0,
+        radius: { 4: 49 },
+        angle: 45,
+        count: 12,
+        children: {
+          radius: 10,
+          fill: 'white',
+          scale: { 1: 0, easing: 'sin.in' },
+          pathScale: [0.7, null],
+          degreeShift: [13, null],
+          duration: [500, 700],
+          isShowEnd: false,
+          isForce3d: true
+        }
+      });
+
+      const burst = new mojs.Burst({
+        left: 0,
+        top: 0,
+        radius: { 0: 280 },
+        count: 2,
+        angle: 90,
+        children: {
+          shape: 'rect',
+          fill: COLORS.VINOUS,
+          radius: 15,
+          duration: DURATION,
+          isForce3d: true
+        }
+      });
+
+      const burst2 = new mojs.Burst({
+        left: 0,
+        top: 0,
+        count: 5,
+        radius: { 0: 150 },
+        angle: 90,
+        children: {
+          shape: 'line',
+          stroke: COLORS.VINOUS,
+          strokeWidth: 5,
+          strokeLinecap: 'round',
+          radius: 25,
+          // angle:    {  0: 360  },
+          scale: 1,
+          scaleX: { 1: 0 },
+          duration: DURATION,
+          isForce3d: true
+        }
+      });
+
+      const dust1 = makeDust(-1);
+      const dust2 = makeDust(1);
+
+      const timeline = new mojs.Timeline();
+      timeline
+        .add(dust1.timeline, dust2.timeline)
+        .add(circle, cloud, burst, burst2);
+
       boxs.forEach((box, index) => {
-        box.addEventListener('click', () => {
-          console.log('click', box.dataset.number);
+        box.addEventListener('click', e => {
+          // console.log('click', box.dataset.number);
+          const x = e.pageX,
+            y = e.pageY;
+
+          const coords = { x, y };
+          circle.tune(coords);
+          cloud.tune(coords);
+          burst.tune(coords);
+          burst2.tune(coords);
+          dust1.parent.tune({ x: { [x]: x - SHIFT }, y });
+          dust2.parent.tune({ x: { [x]: x + SHIFT }, y });
+          timeline.replay();
           stopAnimate();
           anime({
             targets: box,
@@ -210,11 +381,11 @@
         anime.remove('.hero');
         anime.remove('.box');
 
-        animateScript(animationFrame.jumps, hero);
+        animateScript(animationFrame.jumps, hero, true);
         anime({
           targets: '.hero',
-          translateX: '+=34vw',
-          translateY: '-=4vh',
+          translateX: '34vw',
+          translateY: '4vh',
           duration: 1300,
           easing: 'easeInOutSine',
           complete: setTimeout(() => resultMotion(), 1000)
@@ -229,7 +400,7 @@
           } else {
             console.log('오답!!!');
             anime.remove('.hero');
-            animateScript(animationFrame.dead, hero);
+            animateScript(animationFrame.dead, hero, true);
           }
         };
       }
@@ -241,6 +412,8 @@
           img.src = image;
         });
       };
+
+      var snowCount = 200; // 원하는 눈의 개수를 설정
 
       async function init() {
         await preLoadImg([
@@ -259,6 +432,52 @@
           easing: 'linear',
           complete: idle
         });
+
+        const burst = new mojs.Burst({
+          left: 0,
+          top: 0,
+          radius: { 0: 30 },
+          angle: 'rand(0, 360)',
+          children: {
+            shape: 'line',
+            stroke: 'white',
+            fill: 'none',
+            scale: 1,
+            scaleX: { 1: 0 },
+            easing: 'cubic.out',
+            duration: 1000
+          }
+        });
+
+        const bubbles = new mojs.Burst({
+          left: 0,
+          top: 0,
+          radius: 28,
+          count: 3,
+          timeline: { delay: 100 },
+          children: {
+            stroke: 'white',
+            fill: 'none',
+            scale: 1,
+            strokeWidth: { 8: 0 },
+            radius: { 0: 'rand(6, 10)' },
+            degreeShift: 'rand(-50, 50)',
+            duration: 400,
+            delay: 'rand(0, 250)'
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          burst.tune({ x: e.pageX, y: e.pageY }).generate().replay();
+
+          bubbles.tune({ x: e.pageX, y: e.pageY }).generate().replay();
+        });
+
+        for (let i = 0; i < snowCount; i++) {
+          let snow = document.createElement('div');
+          snow.classList.add('snow');
+          document.querySelector('#app').appendChild(snow);
+        }
       }
 
       init();
